@@ -26,7 +26,25 @@ if not logger.hasHandlers():
 async def on_chat_start():
     """Initialize chat session with welcome message and authentication status."""
     logger.info("Chat session started.")
+    chat_profile = cl.user_session.get("chat_profile")
+    logger.info(f"Chat profile: {chat_profile}")
     await agent.initialize()
+
+
+@cl.set_chat_profiles
+async def chat_profile():
+    return [
+        cl.ChatProfile(
+            name="GPT-3.5",
+            markdown_description="The underlying LLM model is **GPT-3.5**.",
+            icon="https://picsum.photos/200",
+        ),
+        cl.ChatProfile(
+            name="GPT-4",
+            markdown_description="The underlying LLM model is **GPT-4**.",
+            icon="https://picsum.photos/250",
+        ),
+    ]
 
 
 @cl.on_message
