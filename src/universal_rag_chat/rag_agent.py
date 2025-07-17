@@ -121,7 +121,7 @@ class UniversalRAGAgent:
 
     async def _create_agent(self):
         """Create the AI agent with Bing Grounding tool."""
-        logger.info("Creating AI agent with Bing Grounding...")
+        logger.info("Creating AI agent ...")
 
         try:
 
