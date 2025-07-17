@@ -1,0 +1,14 @@
+name: universal_chat_ai_foundry
+description: |
+  This Bicep template deploys the AI Foundry infrastructure for the Universal Chat project.
+  It includes the necessary resources such as managed identity, AI Foundry model, and other dependencies.
+  The template is designed to be reusable and customizable for different environments.
+parameters:
+  environmentName:
+    type: string
+    default: "dev"
+    description: Name of the environment used to generate a short unique hash for resources.
+  location:
+    type: string
+    default: "swedencentral"
+    description: Location for the resources.
