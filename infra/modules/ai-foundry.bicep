@@ -148,3 +148,5 @@ resource connectionAppInsight 'Microsoft.CognitiveServices/accounts/connections@
 }
 
 output aiFoundryId string = aiFoundry.id
+output projectEndpoint string = project.properties.endpoints['AI Foundry API']
+output modelDeploymentsName string = modelDeploymentsParameters[0].name

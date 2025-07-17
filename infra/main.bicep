@@ -140,3 +140,9 @@ module aiFoundryModel 'modules/ai-foundry.bicep' = {
     applicationInsightsId: applicationInsights.outputs.aiId
   }
 }
+
+output applicationInsightsId string = applicationInsights.outputs.aiId
+output MODEL_DEPLOYMENT_NAME string = aiFoundryModel.outputs.modelDeploymentsName
+output PROJECT_ENDPOINT string = aiFoundryModel.outputs.projectEndpoint
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = applicationInsights.outputs.connectionString
+output containerAppUrl string = chatApp.outputs.fqdn

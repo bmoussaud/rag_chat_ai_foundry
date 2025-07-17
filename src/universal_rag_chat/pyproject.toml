@@ -1,0 +1,27 @@
+[project]
+name = "universal-ragchat-agent"
+version = "0.1.0"
+description = "AI Foundry SDK agent for universal ragchat with content management and Bing Grounding"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "chainlit",
+    "httpx",
+    "uvicorn",
+    "azure-ai-projects",
+    "azure-ai-agents", 
+    "azure-identity",
+    "azure-monitor-opentelemetry",
+    "opentelemetry-sdk",
+    "opentelemetry-instrumentation-requests",
+    "opentelemetry-instrumentation-fastapi",
+    "opentelemetry-instrumentation-httpx",
+    "opentelemetry-instrumentation-asyncio",
+    "azure-core-tracing-opentelemetry",
+    "python-dotenv",
+    "pydantic",
+    "pydantic-settings"
+]
+
+
