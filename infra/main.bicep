@@ -128,6 +128,16 @@ module chatApp 'modules/container-app.bicep' = {
   }
 }
 
+module aiSearch 'modules/ai-search.bicep' = {
+  name: 'ai-search'
+  params: {
+    searchServiceName: '${rootname}-search'
+    location: location
+    skuName: 'basic'
+    tags: tags
+  }
+}
+
 // Module: AI Foundry Model (placeholder, update with real resource type)
 module aiFoundryModel 'modules/ai-foundry.bicep' = {
   name: 'aiFoundryModel'
