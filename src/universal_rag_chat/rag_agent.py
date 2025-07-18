@@ -44,18 +44,11 @@ class UniversalRAGAgent:
         self.agent_id: Optional[str] = None
         self._initialized = False
 
-    async def initialize(self):
-        """Initialize the agent with Azure AI Foundry."""
-        if self._initialized:
-            return
-
-        logger.info("Initializing Universal RAG Agent...")
-
         # Validate configuration
         validate_required_settings()
 
         # Configure telemetry
-        await self._configure_telemetry()
+        self._configure_telemetry()
 
         # Set up Azure credentials
         if settings.azure_client_id:
@@ -66,13 +59,39 @@ class UniversalRAGAgent:
             credential = DefaultAzureCredential()
             logger.info("Using default Azure credential")
 
-        # Initialize AI Project Client
+        logger.info("Initializing AI Project Client")
         self.project_client = AIProjectClient(
             endpoint=settings.project_endpoint,
             credential=credential
         )
-
         self.agents_client = self.project_client.agents
+
+    async def available_models(self) -> List[Dict[str, Any]]:
+        """Retrieve all available models in the project."""
+        if not self._initialized:
+            await self.initialize()
+
+        try:
+            models = []
+            for d in self.project_client.deployments.list():
+                logger.info(f"*** Found deployment: {d} ***")
+                models.append({
+                    "name": d.name,
+                    "modelPublisher": d['modelPublisher'],
+                    "modelName": d['modelName'],
+                    "modelVersion": d['modelVersion']
+                })
+            return models
+        except Exception as e:
+            logger.error(f"Failed to retrieve models: {e}")
+            return []
+
+    async def initialize(self, model_name: Optional[str] = None):
+        """Initialize the agent with Azure AI Foundry."""
+
+        logger.info("Initializing Universal RAG Agent...")
+        self._selected_model = self._get_model_by_name(
+            model_name) or settings.model_deployment_name
 
         # Create the agent
         await self._create_agent()
@@ -80,7 +99,7 @@ class UniversalRAGAgent:
         self._initialized = True
         logger.info("Universal RAG Agent initialized successfully")
 
-    async def _configure_telemetry(self):
+    def _configure_telemetry(self):
         """Configure Application Insights telemetry."""
         if not settings.azure_monitor_enabled:
             logger.info("Azure Monitor telemetry is disabled")
@@ -107,9 +126,9 @@ class UniversalRAGAgent:
                 )
 
                 # Instrument HTTP clients
-                HTTPXClientInstrumentor().instrument()
-                RequestsInstrumentor().instrument()
-                AsyncioInstrumentor().instrument()
+                # HTTPXClientInstrumentor().instrument()
+                # RequestsInstrumentor().instrument()
+                # AsyncioInstrumentor().instrument()
 
                 logger.info("Application Insights configured successfully")
             else:
@@ -124,11 +143,12 @@ class UniversalRAGAgent:
         logger.info("Creating AI agent ...")
 
         try:
-
-            # Create agent with enhanced instructions for setlist management
+            self._delete_agent()  # Clean up any existing agent
+            logger.info(
+                f"Create agent with enhanced instructions using model: {self._selected_model}")
             agent = self.agents_client.create_agent(
-                model=settings.model_deployment_name,
-                name="universal-agent",
+                model=self._selected_model,
+                name=f"universal-chat-agent-{self._selected_model}",
                 instructions=self._get_agent_instructions(),
                 tools=[],
                 description="Universal RAG Chat Agent",
@@ -146,7 +166,7 @@ class UniversalRAGAgent:
         return """
         You are a helpful AI agent designed to assist users.
         Your primary goal is to provide accurate and engaging responses based on the user's input.
-        Always strive to be helpful, accurate, and engaging while focusing on music and concert-related content.
+        Always strive to be helpful, accurate, and engaging.
         """
 
     async def chat(self, message: str, thread_id: Optional[str] = None) -> Dict[str, Any]:
@@ -272,15 +292,44 @@ class UniversalRAGAgent:
             logger.error(f"Error getting thread history: {e}")
             return []
 
+    def _get_model_by_name(self, model_name: Optional[str]) -> Optional[str]:
+        """
+        Retrieve the deployment name for a given model name.
+        Returns the deployment name if found, otherwise None.
+        """
+        logger.info(f"Retrieving model by name: {model_name}")
+        if not model_name:
+            return None
+        try:
+            for d in self.project_client.deployments.list():
+                if d['modelName'] == model_name:
+                    logger.info(f"Found model: {d['name']}")
+                    return d['name']
+        except Exception as e:
+            logger.error(
+                f"Error retrieving model by name: {e}, returning None")
+        return None
+
+    def _delete_agent(self):
+        """Delete the agent if it exists."""
+        if not self.agent_id:
+            logger.warning("No agent ID set, skipping deletion")
+            return
+
+        try:
+            logger.info(f"Deleting agent with ID: {self.agent_id}")
+            self.agents_client.delete_agent(self.agent_id)
+            logger.info("Agent deleted successfully")
+        except Exception as e:
+            logger.error(f"Failed to delete agent: {e}", exc_info=True)
+
     async def shutdown(self):
         """Clean up resources."""
         logger.info("Shutting down SetlistFM Agent...")
 
         try:
             # Delete the agent
-            if self.agent_id and self.agents_client:
-                self.agents_client.delete_agent(self.agent_id)
-                logger.info(f"Deleted agent: {self.agent_id}")
+            self._delete_agent()
 
             # Close project client
             if self.project_client:

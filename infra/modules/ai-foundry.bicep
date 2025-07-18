@@ -16,7 +16,7 @@ param modelDeploymentsParameters array = [
     version: '2025-04-14'
     format: 'OpenAI'
   }
-  /*
+
   {
     name: '${rootname}-gpt-4.1-nano'
     model: 'gpt-4.1-nano'
@@ -25,7 +25,7 @@ param modelDeploymentsParameters array = [
     version: '2025-04-14'
     format: 'OpenAI'
   }
-
+  /*
   {
     name: '${rootname}-phi-4'
     model: 'Phi-4'
